@@ -1,0 +1,1742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="习惯日历">
+    <title>习惯日历追踪</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #333;
+        }
+
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .month-nav button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .month-nav button:hover {
+            background: #45a049;
+        }
+
+        .month-nav span {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            min-width: 150px;
+            text-align: center;
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: bold;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            color: #666;
+        }
+
+        .day-cell {
+            background: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 0;
+            min-height: 160px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .day-cell:hover {
+            border-color: #4CAF50;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .day-cell.empty {
+            background: transparent;
+            border: none;
+            cursor: default;
+        }
+
+        .day-cell.empty:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .day-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .day-cell.today {
+            border-color: #2196F3;
+            background: #e3f2fd;
+        }
+
+        .tasks {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .task-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #4CAF50;
+        }
+
+        .task-item.completed {
+            color: #999;
+            text-decoration: line-through;
+        }
+
+        .note-indicator {
+            margin-top: auto;
+            padding-top: 8px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+        }
+
+        .note-indicator.has-note {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .close-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            transition: background 0.3s;
+        }
+
+        .close-btn:hover {
+            background: #da190b;
+        }
+
+        .modal-tasks {
+            margin-bottom: 25px;
+        }
+
+        .modal-tasks h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .modal-routines {
+            margin-bottom: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .modal-routines h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .modal-task-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .modal-task-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #4CAF50;
+        }
+
+        .modal-task-item label {
+            flex: 1;
+            font-size: 16px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .modal-notes {
+            margin-top: 25px;
+        }
+
+        .modal-notes h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .note-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        .note-textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .save-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+
+        .save-btn:hover {
+            background: #45a049;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: #f0f0f0;
+            padding: 15px 20px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        .add-task-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 8px;
+        }
+
+        .add-task-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .add-task-input input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+
+        .add-task-input input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .add-task-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+
+        .add-task-btn:hover {
+            background: #45a049;
+        }
+
+        .delete-task-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            transition: background 0.3s;
+        }
+
+        .delete-task-btn:hover {
+            background: #da190b;
+        }
+
+        .empty-tasks {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        /* Image Gallery Styles */
+        .modal-images {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .modal-images h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .image-upload-section {
+            margin-bottom: 20px;
+        }
+
+        .image-upload-btn {
+            display: inline-block;
+            background: #2196F3;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: background 0.3s;
+        }
+
+        .image-upload-btn:hover {
+            background: #1976D2;
+        }
+
+        .image-upload-btn input[type="file"] {
+            display: none;
+        }
+
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .image-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .image-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .image-item.background {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px #4CAF50;
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-controls {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            gap: 5px;
+            padding: 5px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 0 0 0 8px;
+        }
+
+        .image-control-btn {
+            background: rgba(255,255,255,0.9);
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .image-control-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .image-control-btn.delete {
+            color: #f44336;
+        }
+
+        .image-control-btn.set-bg {
+            color: #4CAF50;
+        }
+
+        .background-badge {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .empty-images {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+            font-size: 14px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+        }
+
+        .upload-progress {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 30px 50px;
+            border-radius: 12px;
+            z-index: 3000;
+            text-align: center;
+            display: none;
+        }
+
+        .upload-progress.active {
+            display: block;
+        }
+
+        .upload-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .day-cell-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .day-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.75;
+            border-radius: 6px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .day-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            background: rgba(255,255,255,0.6);
+            border-radius: 6px;
+            padding: 12px;
+        }
+
+        .day-cell.today .day-content {
+            background: rgba(227,242,253,0.75);
+        }
+
+        .has-background .day-content {
+            background: rgba(255,255,255,0.55);
+        }
+
+        .image-preview-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-preview-modal.active {
+            display: flex;
+        }
+
+        .image-preview-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .image-preview-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+        }
+
+        .image-preview-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: white;
+            color: #333;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 15px;
+                border-radius: 0;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .month-nav {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .month-nav button {
+                padding: 8px 16px;
+                font-size: 13px;
+            }
+
+            .month-nav span {
+                font-size: 18px;
+                min-width: 120px;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .stat-item {
+                min-width: 100%;
+            }
+
+            .calendar {
+                gap: 6px;
+            }
+
+            .weekday {
+                padding: 8px 4px;
+                font-size: 13px;
+            }
+
+            .day-cell {
+                min-height: 120px;
+                font-size: 13px;
+            }
+
+            .day-number {
+                font-size: 16px;
+            }
+
+            .task-item {
+                font-size: 11px;
+            }
+
+            .task-checkbox {
+                width: 14px;
+                height: 14px;
+            }
+
+            .note-indicator {
+                font-size: 10px;
+                padding-top: 4px;
+            }
+
+            .modal-content {
+                width: 95%;
+                max-height: 90vh;
+                padding: 20px;
+            }
+
+            .modal-header h2 {
+                font-size: 20px;
+            }
+
+            .modal-tasks h3,
+            .modal-routines h3,
+            .modal-notes h3,
+            .modal-images h3 {
+                font-size: 16px;
+            }
+
+            .add-task-input {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .add-task-input input {
+                width: 100%;
+            }
+
+            .add-task-btn {
+                width: 100%;
+            }
+
+            .modal-task-item {
+                padding: 10px;
+                font-size: 15px;
+            }
+
+            .note-textarea {
+                min-height: 150px;
+                font-size: 14px;
+            }
+
+            .image-gallery {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 10px;
+            }
+
+            .image-upload-btn {
+                display: block;
+                width: 100%;
+                text-align: center;
+                margin-bottom: 10px;
+            }
+
+            .image-preview-close {
+                top: 10px;
+                right: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .day-cell {
+                min-height: 100px;
+            }
+
+            .tasks {
+                gap: 4px;
+            }
+
+            .day-number {
+                font-size: 14px;
+                margin-bottom: 6px;
+            }
+
+            .task-item {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>习惯日历追踪</h1>
+            <div class="month-nav">
+                <button onclick="changeMonth(-1)">上个月</button>
+                <span id="currentMonth"></span>
+                <button onclick="changeMonth(1)">下个月</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">本月完成率</div>
+                <div class="stat-value" id="completionRate">0%</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">连续打卡</div>
+                <div class="stat-value" id="streakDays">0天</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">有笔记天数</div>
+                <div class="stat-value" id="noteDays">0天</div>
+            </div>
+        </div>
+
+        <div class="calendar" id="calendar"></div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalDate"></h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+
+            <div class="modal-tasks">
+                <h3>📝 今日记录</h3>
+                <div class="add-task-section">
+                    <div class="add-task-input">
+                        <input type="text" id="newTaskInput" placeholder="输入今天做的事情，例如：看电影、买菜..." />
+                        <button class="add-task-btn" onclick="addTask()">添加</button>
+                    </div>
+                </div>
+                <div id="modalTasksList"></div>
+            </div>
+
+            <div class="modal-routines">
+                <h3>日常习惯 (Routine)</h3>
+                <div class="add-task-section">
+                    <div class="add-task-input">
+                        <input type="text" id="newRoutineInput" placeholder="添加自定义习惯..." />
+                        <button class="add-task-btn" onclick="addRoutine()">添加习惯</button>
+                    </div>
+                </div>
+                <div id="modalRoutinesList"></div>
+            </div>
+
+            <div class="modal-notes">
+                <h3>随手记</h3>
+                <textarea class="note-textarea" id="noteTextarea" placeholder="记录今天的心得和想法..."></textarea>
+                <button class="save-btn" onclick="saveNote()">保存笔记</button>
+            </div>
+
+            <div class="modal-images">
+                <h3>今日图片</h3>
+                <div class="image-upload-section">
+                    <label class="image-upload-btn">
+                        <input type="file" id="imageInput" accept="image/*" multiple onchange="handleImageUpload(event)" />
+                        上传图片
+                    </label>
+                    <span style="margin-left: 10px; color: #666; font-size: 14px;">可上传多张图片，点击星星设置为背景</span>
+                </div>
+                <div id="imageGallery"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div class="image-preview-modal" id="imagePreviewModal">
+        <div class="image-preview-content">
+            <button class="image-preview-close" onclick="closeImagePreview()">&times;</button>
+            <img id="previewImage" src="" alt="预览" />
+        </div>
+    </div>
+
+    <!-- Upload Progress -->
+    <div class="upload-progress" id="uploadProgress">
+        <div class="upload-spinner"></div>
+        <div id="uploadText">正在处理图片...</div>
+    </div>
+
+    <script>
+        // 默认的日常习惯
+        const DEFAULT_ROUTINES = [
+            '拉屎',
+            '11:30睡觉',
+            '运动'
+        ];
+
+        // 全局状态
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth();
+        let selectedDate = null;
+        let data = {};
+        let customRoutines = []; // 自定义的routine项目
+
+        // 初始化
+        function init() {
+            loadData();
+            renderCalendar();
+            updateStats();
+        }
+
+        // 加载数据
+        function loadData() {
+            const saved = localStorage.getItem('habitCalendarData');
+            if (saved) {
+                data = JSON.parse(saved);
+            }
+
+            const savedRoutines = localStorage.getItem('customRoutines');
+            if (savedRoutines) {
+                customRoutines = JSON.parse(savedRoutines);
+            }
+        }
+
+        // 保存数据
+        function saveData() {
+            try {
+                const dataStr = JSON.stringify(data);
+                const dataSize = new Blob([dataStr]).size;
+
+                // 检查大小（localStorage通常限制5-10MB）
+                if (dataSize > 4.5 * 1024 * 1024) {
+                    throw new Error('数据量过大，建议删除一些旧图片');
+                }
+
+                localStorage.setItem('habitCalendarData', dataStr);
+                localStorage.setItem('customRoutines', JSON.stringify(customRoutines));
+                updateStats();
+            } catch (error) {
+                console.error('保存失败:', error);
+
+                // 如果是配额超出错误
+                if (error.name === 'QuotaExceededError' ||
+                    error.message.includes('quota') ||
+                    error.message.includes('数据量过大')) {
+                    throw new Error('存储空间已满！请删除一些图片或旧数据。');
+                }
+                throw error;
+            }
+        }
+
+        // 获取日期键
+        function getDateKey(year, month, day) {
+            return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        }
+
+        // 获取当天数据
+        function getDayData(dateKey) {
+            if (!data[dateKey]) {
+                // 初始化routine数据
+                const allRoutines = [...DEFAULT_ROUTINES, ...customRoutines];
+                const routinesData = {};
+                allRoutines.forEach(routine => {
+                    routinesData[routine] = false;
+                });
+
+                data[dateKey] = {
+                    tasks: [],
+                    routines: routinesData,
+                    note: '',
+                    images: [],
+                    backgroundImageId: null
+                };
+            } else {
+                // 确保有最新的routine项目
+                const allRoutines = [...DEFAULT_ROUTINES, ...customRoutines];
+                if (!data[dateKey].routines) {
+                    data[dateKey].routines = {};
+                }
+                allRoutines.forEach(routine => {
+                    if (!(routine in data[dateKey].routines)) {
+                        data[dateKey].routines[routine] = false;
+                    }
+                });
+            }
+            return data[dateKey];
+        }
+
+        // 渲染日历
+        function renderCalendar() {
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+
+            // 更新月份显示
+            document.getElementById('currentMonth').textContent =
+                `${currentYear}年 ${currentMonth + 1}月`;
+
+            // 星期标题
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            weekdays.forEach(day => {
+                const weekdayEl = document.createElement('div');
+                weekdayEl.className = 'weekday';
+                weekdayEl.textContent = day;
+                calendar.appendChild(weekdayEl);
+            });
+
+            // 获取当月第一天和总天数
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === currentYear &&
+                                   today.getMonth() === currentMonth;
+
+            // 空白格子
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-cell empty';
+                calendar.appendChild(emptyCell);
+            }
+
+            // 日期格子
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateKey = getDateKey(currentYear, currentMonth, day);
+                const dayData = getDayData(dateKey);
+
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell';
+
+                if (isCurrentMonth && today.getDate() === day) {
+                    dayCell.classList.add('today');
+                }
+
+                // 如果有背景图片
+                if (dayData.backgroundImageId) {
+                    const bgImage = dayData.images.find(img => img.id === dayData.backgroundImageId);
+                    if (bgImage) {
+                        dayCell.classList.add('has-background');
+                        const bgImg = document.createElement('img');
+                        bgImg.src = bgImage.data;
+                        bgImg.className = 'day-background';
+                        dayCell.appendChild(bgImg);
+                    }
+                }
+
+                // 创建内容容器
+                const dayContent = document.createElement('div');
+                dayContent.className = 'day-content';
+
+                // 日期数字
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'day-number';
+                dayNumber.textContent = day;
+                dayContent.appendChild(dayNumber);
+
+                // 任务列表
+                const tasksDiv = document.createElement('div');
+                tasksDiv.className = 'tasks';
+
+                dayData.tasks.forEach(task => {
+                    const taskItem = document.createElement('div');
+                    taskItem.className = 'task-item' + (task.completed ? ' completed' : '');
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.className = 'task-checkbox';
+                    checkbox.checked = task.completed;
+                    checkbox.onclick = (e) => {
+                        e.stopPropagation();
+                        toggleTask(dateKey, task.id);
+                    };
+
+                    const label = document.createElement('span');
+                    label.textContent = task.name;
+
+                    taskItem.appendChild(checkbox);
+                    taskItem.appendChild(label);
+                    tasksDiv.appendChild(taskItem);
+                });
+
+                dayContent.appendChild(tasksDiv);
+
+                // 笔记指示器
+                const noteIndicator = document.createElement('div');
+                noteIndicator.className = 'note-indicator';
+                if (dayData.note && dayData.note.trim()) {
+                    noteIndicator.classList.add('has-note');
+                    noteIndicator.textContent = '📝 有笔记';
+                } else {
+                    noteIndicator.textContent = '点击记录';
+                }
+                dayContent.appendChild(noteIndicator);
+
+                dayCell.appendChild(dayContent);
+
+                // 点击事件
+                dayCell.onclick = () => openModal(currentYear, currentMonth, day);
+
+                calendar.appendChild(dayCell);
+            }
+        }
+
+        // 切换任务状态
+        function toggleTask(dateKey, taskId) {
+            const dayData = getDayData(dateKey);
+            const task = dayData.tasks.find(t => t.id === taskId);
+            if (task) {
+                task.completed = !task.completed;
+                try {
+                    saveData();
+                    renderCalendar();
+                } catch (error) {
+                    alert('保存失败：' + error.message);
+                    task.completed = !task.completed; // 回滚
+                }
+            }
+        }
+
+        // 切换月份
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+            updateStats();
+        }
+
+        // 打开详情Modal
+        function openModal(year, month, day) {
+            selectedDate = { year, month, day };
+            const dateKey = getDateKey(year, month, day);
+            const dayData = getDayData(dateKey);
+
+            // 设置标题
+            document.getElementById('modalDate').textContent =
+                `${year}年${month + 1}月${day}日`;
+
+            // 清空输入框
+            document.getElementById('newTaskInput').value = '';
+            document.getElementById('newRoutineInput').value = '';
+
+            // 渲染任务列表和routine列表
+            renderModalTasks();
+            renderModalRoutines();
+
+            // 设置笔记
+            document.getElementById('noteTextarea').value = dayData.note || '';
+
+            // 渲染图片库
+            renderImageGallery();
+
+            // 显示Modal
+            document.getElementById('modal').classList.add('active');
+        }
+
+        // 渲染Modal中的任务列表
+        function renderModalTasks() {
+            if (!selectedDate) return;
+
+            const dateKey = getDateKey(selectedDate.year, selectedDate.month, selectedDate.day);
+            const dayData = getDayData(dateKey);
+            const tasksList = document.getElementById('modalTasksList');
+            tasksList.innerHTML = '';
+
+            if (dayData.tasks.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.className = 'empty-tasks';
+                emptyMsg.textContent = '还没有添加任何事项，点击上方添加今天做的事情吧~';
+                tasksList.appendChild(emptyMsg);
+                return;
+            }
+
+            dayData.tasks.forEach(task => {
+                const taskItem = document.createElement('div');
+                taskItem.className = 'modal-task-item';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `modal-task-${task.id}`;
+                checkbox.checked = task.completed;
+                checkbox.onchange = () => {
+                    task.completed = checkbox.checked;
+                    saveData();
+                    renderCalendar();
+                };
+
+                const label = document.createElement('label');
+                label.htmlFor = `modal-task-${task.id}`;
+                label.textContent = task.name;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-task-btn';
+                deleteBtn.textContent = '×';
+                deleteBtn.onclick = () => deleteTask(task.id);
+
+                taskItem.appendChild(checkbox);
+                taskItem.appendChild(label);
+                taskItem.appendChild(deleteBtn);
+                tasksList.appendChild(taskItem);
+            });
+        }
+
+        // 添加新任务
+        function addTask() {
+            if (!selectedDate) return;
+
+            const input = document.getElementById('newTaskInput');
+            const taskName = input.value.trim();
+
+            if (!taskName) {
+                alert('请输入事项内容');
+                return;
+            }
+
+            const dateKey = getDateKey(selectedDate.year, selectedDate.month, selectedDate.day);
+            const dayData = getDayData(dateKey);
+
+            // 检查是否已存在相同名称的任务
+            if (dayData.tasks.some(t => t.name === taskName)) {
+                alert('这个事项已经存在了');
+                return;
+            }
+
+            // 添加新任务
+            const newTask = {
+                id: Date.now().toString(),
+                name: taskName,
+                completed: false
+            };
+
+            dayData.tasks.push(newTask);
+
+            try {
+                saveData();
+                renderCalendar();
+                renderModalTasks();
+
+                // 清空输入框
+                input.value = '';
+                input.focus();
+            } catch (error) {
+                dayData.tasks.pop(); // 回滚
+                alert('保存失败：' + error.message);
+            }
+        }
+
+        // 删除任务
+        function deleteTask(taskId) {
+            if (!selectedDate) return;
+            if (!confirm('确定要删除这个事项吗？')) return;
+
+            const dateKey = getDateKey(selectedDate.year, selectedDate.month, selectedDate.day);
+            const dayData = getDayData(dateKey);
+
+            dayData.tasks = dayData.tasks.filter(t => t.id !== taskId);
+            saveData();
+            renderCalendar();
+            renderModalTasks();
+        }
+
+        // 渲染Routine列表
+        function renderModalRoutines() {
+            if (!selectedDate) return;
+
+            const dateKey = getDateKey(selectedDate.year, selectedDate.month, selectedDate.day);
+            const dayData = getDayData(dateKey);
+            const routinesList = document.getElementById('modalRoutinesList');
+            routinesList.innerHTML = '';
+
+            const allRoutines = [...DEFAULT_ROUTINES, ...customRoutines];
+
+            allRoutines.forEach(routine => {
+                const routineItem = document.createElement('div');
+                routineItem.className = 'modal-task-item';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `modal-routine-${routine}`;
+                checkbox.checked = dayData.routines[routine] || false;
+                checkbox.onchange = () => {
+                    dayData.routines[routine] = checkbox.checked;
+                    saveData();
+                    renderCalendar();
+                };
+
+                const label = document.createElement('label');
+                label.htmlFor = `modal-routine-${routine}`;
+                label.textContent = routine;
+
+                routineItem.appendChild(checkbox);
+                routineItem.appendChild(label);
+
+                // 只有自定义的routine可以删除
+                if (!DEFAULT_ROUTINES.includes(routine)) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-task-btn';
+                    deleteBtn.textContent = '×';
+                    deleteBtn.onclick = () => deleteRoutine(routine);
+                    routineItem.appendChild(deleteBtn);
+                }
+
+                routinesList.appendChild(routineItem);
+            });
+        }
+
+        // 添加自定义Routine
+        function addRoutine() {
+            const input = document.getElementById('newRoutineInput');
+            const routineName = input.value.trim();
+
+            if (!routineName) {
+                alert('请输入习惯内容');
+                return;
+            }
+
+            // 检查是否已存在
+            const allRoutines = [...DEFAULT_ROUTINES, ...customRoutines];
+            if (allRoutines.includes(routineName)) {
+                alert('这个习惯已经存在了');
+                return;
+            }
+
+            // 添加到自定义列表
+            customRoutines.push(routineName);
+
+            // 为所有日期添加这个routine
+            Object.keys(data).forEach(dateKey => {
+                if (!data[dateKey].routines) {
+                    data[dateKey].routines = {};
+                }
+                data[dateKey].routines[routineName] = false;
+            });
+
+            try {
+                saveData();
+                renderModalRoutines();
+
+                // 清空输入框
+                input.value = '';
+                input.focus();
+            } catch (error) {
+                customRoutines.pop(); // 回滚
+                alert('保存失败：' + error.message);
+            }
+        }
+
+        // 删除自定义Routine
+        function deleteRoutine(routineName) {
+            if (DEFAULT_ROUTINES.includes(routineName)) {
+                alert('默认习惯不能删除');
+                return;
+            }
+
+            if (!confirm(`确定要删除习惯"${routineName}"吗？将从所有日期中移除。`)) return;
+
+            // 从自定义列表中移除
+            customRoutines = customRoutines.filter(r => r !== routineName);
+
+            // 从所有日期中移除
+            Object.keys(data).forEach(dateKey => {
+                if (data[dateKey].routines) {
+                    delete data[dateKey].routines[routineName];
+                }
+            });
+
+            saveData();
+            renderCalendar();
+            renderModalRoutines();
+        }
+
+        // 关闭Modal
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            selectedDate = null;
+        }
+
+        // 保存笔记
+        function saveNote() {
+            if (!selectedDate) return;
+
+            const dateKey = getDateKey(selectedDate.year, selectedDate.month, selectedDate.day);
+            const dayData = getDayData(dateKey);
+            dayData.note = document.getElementById('noteTextarea').value;
+
+            try {
+                saveData();
+                renderCalendar();
+                alert('笔记已保存！');
+            } catch (error) {
+                alert('保存失败：' + error.message);
+            }
+        }
+
+        // 更新统计
+        function updateStats() {
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            let totalTasks = 0;
+            let completedTasks = 0;
+            let noteDaysCount = 0;
+            let consecutiveDays = 0;
+            let foundIncomplete = false;
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateKey = getDateKey(currentYear, currentMonth, day);
+                if (data[dateKey] && data[dateKey].tasks.length > 0) {
+                    const tasks = data[dateKey].tasks;
+                    const dayComplete = tasks.every(t => t.completed);
+
+                    totalTasks += tasks.length;
+                    completedTasks += tasks.filter(t => t.completed).length;
+
+                    if (data[dateKey].note && data[dateKey].note.trim()) {
+                        noteDaysCount++;
+                    }
+
+                    // 计算连续天数（从今天往前）
+                    const today = new Date();
+                    if (currentYear === today.getFullYear() &&
+                        currentMonth === today.getMonth() &&
+                        day <= today.getDate() &&
+                        !foundIncomplete) {
+                        if (dayComplete && tasks.length > 0) {
+                            consecutiveDays++;
+                        } else {
+                            foundIncomplete = true;
+                        }
+                    }
+                }
+            }
+
+            const completionRate = totalTasks > 0 ?
+                Math.round((completedTasks / totalTasks) * 100) : 0;
+
+            document.getElementById('completionRate').textContent = `${completionRate}%`;
+            document.getElementById('streakDays').textContent = `${consecutiveDays}天`;
+            document.getElementById('noteDays').textContent = `${noteDaysCount}天`;
+        }
+
+        // 回车添加任务
+        document.addEventListener('DOMContentLoaded', function() {
+            const taskInput = document.getElementById('newTaskInput');
+            if (taskInput) {
+                taskInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        addTask();
+                    }
+                });
+            }
+
+            const routineInput = document.getElementById('newRoutineInput');
+            if (routineInput) {
+                routineInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        addRoutine();
+                    }
+                });
+            }
+        });
+
+        // 图片上传处理
+        async function handleImageUpload(event) {
+            if (!selectedDate) return;
+
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            const dateKey = getDateKey(selectedDate.year, selectedDate.month, selectedDate.day);
+            const dayData = getDayData(dateKey);
+
+            // 显示加载提示
+            showUploadProgress('正在处理图片...');
+
+            let processed = 0;
+            const total = files.length;
+
+            for (const file of Array.from(files)) {
+                if (!file.type.startsWith('image/')) {
+                    alert('只能上传图片文件');
+                    continue;
+                }
+
+                try {
+                    processed++;
+                    showUploadProgress(`正在处理第 ${processed}/${total} 张图片...`);
+
+                    // 压缩图片
+                    const compressedData = await compressImage(file);
+
+                    const imageData = {
+                        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                        data: compressedData,
+                        name: file.name,
+                        uploadTime: new Date().toISOString()
+                    };
+
+                    dayData.images.push(imageData);
+                } catch (error) {
+                    console.error('图片处理失败:', error);
+                    alert(`图片 ${file.name} 处理失败，请重试`);
+                }
+            }
+
+            try {
+                saveData();
+                renderCalendar();
+                renderImageGallery();
+                hideUploadProgress();
+            } catch (error) {
+                hideUploadProgress();
+                alert('保存失败！可能是存储空间已满。请删除一些旧图片后重试。');
+                console.error('保存失败:', error);
+            }
+
+            // 清空input
+            event.target.value = '';
+        }
+
+        // 压缩图片
+        function compressImage(file, maxWidth = 1200, quality = 0.8) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = (e) => {
+                    const img = new Image();
+
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // 等比例缩放
+                        if (width > maxWidth) {
+                            height = (height * maxWidth) / width;
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // 转换为压缩后的base64
+                        const compressedData = canvas.toDataURL('image/jpeg', quality);
+                        resolve(compressedData);
+                    };
+
+                    img.onerror = () => reject(new Error('图片加载失败'));
+                    img.src = e.target.result;
+                };
+
+                reader.onerror = () => reject(new Error('文件读取失败'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 显示上传进度
+        function showUploadProgress(text) {
+            const progress = document.getElementById('uploadProgress');
+            const progressText = document.getElementById('uploadText');
+            progressText.textContent = text;
+            progress.classList.add('active');
+        }
+
+        // 隐藏上传进度
+        function hideUploadProgress() {
+            const progress = document.getElementById('uploadProgress');
+            progress.classList.remove('active');
+        }
+
+        // 渲染图片库
+        function renderImageGallery() {
+            if (!selectedDate) return;
+
+            const dateKey = getDateKey(selectedDate.year, selectedDate.month, selectedDate.day);
+            const dayData = getDayData(dateKey);
+            const gallery = document.getElementById('imageGallery');
+            gallery.innerHTML = '';
+
+            if (dayData.images.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.className = 'empty-images';
+                emptyMsg.textContent = '还没有上传图片，点击上方按钮上传今天的美好瞬间~';
+                gallery.appendChild(emptyMsg);
+                return;
+            }
+
+            gallery.className = 'image-gallery';
+
+            dayData.images.forEach(image => {
+                const imageItem = document.createElement('div');
+                imageItem.className = 'image-item';
+                if (image.id === dayData.backgroundImageId) {
+                    imageItem.classList.add('background');
+                }
+
+                const img = document.createElement('img');
+                img.src = image.data;
+                img.alt = image.name;
+                img.onclick = () => previewImage(image.data);
+
+                const controls = document.createElement('div');
+                controls.className = 'image-controls';
+
+                // 设置背景按钮
+                const setBgBtn = document.createElement('button');
+                setBgBtn.className = 'image-control-btn set-bg';
+                setBgBtn.innerHTML = '⭐';
+                setBgBtn.title = '设为背景';
+                setBgBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    setBackgroundImage(image.id);
+                };
+
+                // 删除按钮
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'image-control-btn delete';
+                deleteBtn.innerHTML = '🗑';
+                deleteBtn.title = '删除图片';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteImage(image.id);
+                };
+
+                controls.appendChild(setBgBtn);
+                controls.appendChild(deleteBtn);
+
+                imageItem.appendChild(img);
+                imageItem.appendChild(controls);
+
+                // 如果是背景图片，显示标记
+                if (image.id === dayData.backgroundImageId) {
+                    const badge = document.createElement('div');
+                    badge.className = 'background-badge';
+                    badge.textContent = '日历背景';
+                    imageItem.appendChild(badge);
+                }
+
+                gallery.appendChild(imageItem);
+            });
+        }
+
+        // 设置背景图片
+        function setBackgroundImage(imageId) {
+            if (!selectedDate) return;
+
+            const dateKey = getDateKey(selectedDate.year, selectedDate.month, selectedDate.day);
+            const dayData = getDayData(dateKey);
+
+            // 如果点击的是当前背景，则取消背景
+            if (dayData.backgroundImageId === imageId) {
+                dayData.backgroundImageId = null;
+            } else {
+                dayData.backgroundImageId = imageId;
+            }
+
+            saveData();
+            renderCalendar();
+            renderImageGallery();
+        }
+
+        // 删除图片
+        function deleteImage(imageId) {
+            if (!selectedDate) return;
+            if (!confirm('确定要删除这张图片吗？')) return;
+
+            const dateKey = getDateKey(selectedDate.year, selectedDate.month, selectedDate.day);
+            const dayData = getDayData(dateKey);
+
+            dayData.images = dayData.images.filter(img => img.id !== imageId);
+
+            // 如果删除的是背景图片，清除背景设置
+            if (dayData.backgroundImageId === imageId) {
+                dayData.backgroundImageId = null;
+            }
+
+            saveData();
+            renderCalendar();
+            renderImageGallery();
+        }
+
+        // 预览图片
+        function previewImage(imageSrc) {
+            document.getElementById('previewImage').src = imageSrc;
+            document.getElementById('imagePreviewModal').classList.add('active');
+        }
+
+        // 关闭图片预览
+        function closeImagePreview() {
+            document.getElementById('imagePreviewModal').classList.remove('active');
+        }
+
+        // 点击预览模态框外部关闭
+        document.getElementById('imagePreviewModal').onclick = function(e) {
+            if (e.target === this) {
+                closeImagePreview();
+            }
+        };
+
+        // 点击模态框外部关闭
+        document.getElementById('modal').onclick = function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        };
+
+        // 初始化应用
+        init();
+    </script>
+</body>
+</html>
