@@ -170,53 +170,97 @@
             font-weight: bold;
         }
 
-        /* Modal */
-        .modal {
+        /* 日期详情区域 */
+        .day-details {
             display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
+            margin-top: 30px;
+            padding: 25px;
             background: white;
             border-radius: 12px;
-            padding: 30px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 2px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .modal-header {
+        .day-details.active {
+            display: block;
+        }
+
+        .detail-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
         }
 
-        .modal-header h2 {
+        .detail-header h2 {
             font-size: 24px;
             color: #333;
         }
 
-        .close-btn {
+        .close-detail-btn {
             background: #f44336;
             color: white;
             border: none;
             width: 32px;
             height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            transition: background 0.3s;
+        }
+
+        .close-detail-btn:hover {
+            background: #da190b;
+        }
+
+        .detail-tasks {
+            margin-bottom: 25px;
+        }
+
+        .detail-tasks h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .detail-routines {
+            margin-bottom: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .detail-routines h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .detail-notes {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .detail-notes h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .detail-images {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .detail-images h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 15px;
+        }
             border-radius: 50%;
             cursor: pointer;
             font-size: 20px;
@@ -250,7 +294,7 @@
             margin-bottom: 15px;
         }
 
-        .modal-task-item {
+        .detail-task-item {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -260,14 +304,14 @@
             margin-bottom: 10px;
         }
 
-        .modal-task-item input[type="checkbox"] {
+        .detail-task-item input[type="checkbox"] {
             width: 20px;
             height: 20px;
             cursor: pointer;
             accent-color: #4CAF50;
         }
 
-        .modal-task-item label {
+        .detail-task-item label {
             flex: 1;
             font-size: 16px;
             color: #333;
@@ -733,7 +777,7 @@
                 width: 100%;
             }
 
-            .modal-task-item {
+            .detail-task-item {
                 padding: 10px;
                 font-size: 15px;
             }
@@ -796,17 +840,15 @@
         </div>
 
         <div class="calendar" id="calendar"></div>
-    </div>
 
-    <!-- Modal -->
-    <div class="modal" id="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalDate"></h2>
-                <button class="close-btn" onclick="closeModal()">&times;</button>
+        <!-- 日期详情区域 -->
+        <div class="day-details" id="dayDetails">
+            <div class="detail-header">
+                <h2 id="detailDate">选择一天查看详情</h2>
+                <button class="close-detail-btn" onclick="closeDetails()">&times;</button>
             </div>
 
-            <div class="modal-tasks">
+            <div class="detail-tasks">
                 <h3>📝 今日记录</h3>
                 <div class="add-task-section">
                     <div class="add-task-input">
@@ -814,10 +856,10 @@
                         <button class="add-task-btn" onclick="addTask()">添加</button>
                     </div>
                 </div>
-                <div id="modalTasksList"></div>
+                <div id="detailTasksList"></div>
             </div>
 
-            <div class="modal-routines">
+            <div class="detail-routines">
                 <h3>日常习惯 (Routine)</h3>
                 <div class="add-task-section">
                     <div class="add-task-input">
@@ -825,16 +867,16 @@
                         <button class="add-task-btn" onclick="addRoutine()">添加习惯</button>
                     </div>
                 </div>
-                <div id="modalRoutinesList"></div>
+                <div id="detailRoutinesList"></div>
             </div>
 
-            <div class="modal-notes">
+            <div class="detail-notes">
                 <h3>随手记</h3>
                 <textarea class="note-textarea" id="noteTextarea" placeholder="记录今天的心得和想法..."></textarea>
                 <button class="save-btn" onclick="saveNote()">保存笔记</button>
             </div>
 
-            <div class="modal-images">
+            <div class="detail-images">
                 <h3>今日图片</h3>
                 <div class="image-upload-section">
                     <label class="image-upload-btn">
@@ -1068,7 +1110,7 @@
                 dayCell.appendChild(dayContent);
 
                 // 点击事件
-                dayCell.onclick = () => openModal(currentYear, currentMonth, day);
+                dayCell.onclick = () => openDetails(currentYear, currentMonth, day);
 
                 calendar.appendChild(dayCell);
             }
@@ -1104,14 +1146,14 @@
             updateStats();
         }
 
-        // 打开详情Modal
-        function openModal(year, month, day) {
+        // 打开详情区域
+        function openDetails(year, month, day) {
             selectedDate = { year, month, day };
             const dateKey = getDateKey(year, month, day);
             const dayData = getDayData(dateKey);
 
             // 设置标题
-            document.getElementById('modalDate').textContent =
+            document.getElementById('detailDate').textContent =
                 `${year}年${month + 1}月${day}日`;
 
             // 清空输入框
@@ -1119,8 +1161,8 @@
             document.getElementById('newRoutineInput').value = '';
 
             // 渲染任务列表和routine列表
-            renderModalTasks();
-            renderModalRoutines();
+            renderDetailTasks();
+            renderDetailRoutines();
 
             // 设置笔记
             document.getElementById('noteTextarea').value = dayData.note || '';
@@ -1128,17 +1170,19 @@
             // 渲染图片库
             renderImageGallery();
 
-            // 显示Modal
-            document.getElementById('modal').classList.add('active');
+            // 显示详情区域并滚动到该位置
+            const detailsEl = document.getElementById('dayDetails');
+            detailsEl.classList.add('active');
+            detailsEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         // 渲染Modal中的任务列表
-        function renderModalTasks() {
+        function renderDetailTasks() {
             if (!selectedDate) return;
 
             const dateKey = getDateKey(selectedDate.year, selectedDate.month, selectedDate.day);
             const dayData = getDayData(dateKey);
-            const tasksList = document.getElementById('modalTasksList');
+            const tasksList = document.getElementById('detailTasksList');
             tasksList.innerHTML = '';
 
             if (dayData.tasks.length === 0) {
@@ -1151,7 +1195,7 @@
 
             dayData.tasks.forEach(task => {
                 const taskItem = document.createElement('div');
-                taskItem.className = 'modal-task-item';
+                taskItem.className = 'detail-task-item';
 
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
@@ -1212,7 +1256,7 @@
             try {
                 saveData();
                 renderCalendar();
-                renderModalTasks();
+                renderDetailTasks();
 
                 // 清空输入框
                 input.value = '';
@@ -1234,23 +1278,23 @@
             dayData.tasks = dayData.tasks.filter(t => t.id !== taskId);
             saveData();
             renderCalendar();
-            renderModalTasks();
+            renderDetailTasks();
         }
 
         // 渲染Routine列表
-        function renderModalRoutines() {
+        function renderDetailRoutines() {
             if (!selectedDate) return;
 
             const dateKey = getDateKey(selectedDate.year, selectedDate.month, selectedDate.day);
             const dayData = getDayData(dateKey);
-            const routinesList = document.getElementById('modalRoutinesList');
+            const routinesList = document.getElementById('detailRoutinesList');
             routinesList.innerHTML = '';
 
             const allRoutines = [...DEFAULT_ROUTINES, ...customRoutines];
 
             allRoutines.forEach(routine => {
                 const routineItem = document.createElement('div');
-                routineItem.className = 'modal-task-item';
+                routineItem.className = 'detail-task-item';
 
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
@@ -1312,7 +1356,7 @@
 
             try {
                 saveData();
-                renderModalRoutines();
+                renderDetailRoutines();
 
                 // 清空输入框
                 input.value = '';
@@ -1344,12 +1388,12 @@
 
             saveData();
             renderCalendar();
-            renderModalRoutines();
+            renderDetailRoutines();
         }
 
-        // 关闭Modal
-        function closeModal() {
-            document.getElementById('modal').classList.remove('active');
+        // 关闭详情区域
+        function closeDetails() {
+            document.getElementById('dayDetails').classList.remove('active');
             selectedDate = null;
         }
 
@@ -1639,7 +1683,7 @@
         // 点击模态框外部关闭
         document.getElementById('modal').onclick = function(e) {
             if (e.target === this) {
-                closeModal();
+                closeDetails();
             }
         };
 
