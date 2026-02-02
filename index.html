@@ -966,13 +966,25 @@
         // 加载数据
         function loadData() {
             const saved = localStorage.getItem('habitCalendarData');
+            console.log('加载数据:', saved ? '找到数据' : '没有数据');
             if (saved) {
-                data = JSON.parse(saved);
+                try {
+                    data = JSON.parse(saved);
+                    console.log('成功加载数据，记录数:', Object.keys(data).length);
+                } catch (error) {
+                    console.error('数据解析失败:', error);
+                    data = {};
+                }
             }
 
             const savedRoutines = localStorage.getItem('customRoutines');
             if (savedRoutines) {
-                customRoutines = JSON.parse(savedRoutines);
+                try {
+                    customRoutines = JSON.parse(savedRoutines);
+                } catch (error) {
+                    console.error('Routines解析失败:', error);
+                    customRoutines = [];
+                }
             }
         }
 
@@ -982,6 +994,8 @@
                 const dataStr = JSON.stringify(data);
                 const dataSize = new Blob([dataStr]).size;
 
+                console.log('保存数据，记录数:', Object.keys(data).length, '大小:', dataSize, 'bytes');
+
                 // 检查大小（localStorage通常限制5-10MB）
                 if (dataSize > 4.5 * 1024 * 1024) {
                     throw new Error('数据量过大，建议删除一些旧图片');
@@ -989,6 +1003,7 @@
 
                 localStorage.setItem('habitCalendarData', dataStr);
                 localStorage.setItem('customRoutines', JSON.stringify(customRoutines));
+                console.log('数据保存成功！');
                 updateStats();
             } catch (error) {
                 console.error('保存失败:', error);
