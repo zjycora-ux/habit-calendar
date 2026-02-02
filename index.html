@@ -881,6 +881,12 @@
             </div>
         </div>
 
+        <!-- 调试信息 -->
+        <div id="debugInfo" style="background: #fffacd; padding: 10px; margin-bottom: 15px; border-radius: 6px; font-size: 13px;">
+            <strong>调试信息：</strong><br>
+            <span id="debugText">正在检查...</span>
+        </div>
+
         <div class="calendar" id="calendar"></div>
 
         <!-- 日期详情区域 -->
@@ -961,6 +967,41 @@
             loadData();
             renderCalendar();
             updateStats();
+            updateDebugInfo();
+        }
+
+        // 更新调试信息
+        function updateDebugInfo() {
+            const debugText = document.getElementById('debugText');
+            const saved = localStorage.getItem('habitCalendarData');
+
+            let info = [];
+
+            // 检查 localStorage 是否可用
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                info.push('✅ localStorage 可用');
+            } catch (e) {
+                info.push('❌ localStorage 不可用: ' + e.message);
+            }
+
+            // 显示数据状态
+            if (saved) {
+                try {
+                    const parsedData = JSON.parse(saved);
+                    const recordCount = Object.keys(parsedData).length;
+                    const dataSize = new Blob([saved]).size;
+                    info.push(`✅ 找到 ${recordCount} 天的记录`);
+                    info.push(`📊 数据大小: ${(dataSize / 1024).toFixed(2)} KB`);
+                } catch (e) {
+                    info.push('❌ 数据解析失败');
+                }
+            } else {
+                info.push('⚠️ 没有找到保存的数据');
+            }
+
+            debugText.innerHTML = info.join('<br>');
         }
 
         // 加载数据
@@ -1005,6 +1046,7 @@
                 localStorage.setItem('customRoutines', JSON.stringify(customRoutines));
                 console.log('数据保存成功！');
                 updateStats();
+                updateDebugInfo(); // 更新调试信息
             } catch (error) {
                 console.error('保存失败:', error);
 
