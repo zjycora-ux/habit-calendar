@@ -276,6 +276,22 @@
             margin-bottom: 15px;
         }
 
+        .note-display {
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .note-display:empty::before {
+            content: '还没有笔记';
+            color: #999;
+        }
+
         .detail-images {
             margin-top: 25px;
             padding-top: 25px;
@@ -888,24 +904,16 @@
                 <div id="detailTasksList"></div>
             </div>
 
-            <div class="detail-routines">
-                <div class="section-header">
-                    <h3>日常习惯 (Routine)</h3>
-                    <button class="add-icon-btn" onclick="toggleRoutineInput()">➕</button>
-                </div>
-                <div class="add-task-section" id="routineInputSection" style="display: none;">
-                    <div class="add-task-input">
-                        <input type="text" id="newRoutineInput" placeholder="添加自定义习惯..." />
-                        <button class="add-task-btn" onclick="addRoutine()">添加习惯</button>
-                    </div>
-                </div>
-                <div id="detailRoutinesList"></div>
-            </div>
-
             <div class="detail-notes">
-                <h3>随手记</h3>
-                <textarea class="note-textarea" id="noteTextarea" placeholder="记录今天的心得和想法..."></textarea>
-                <button class="save-btn" onclick="saveNote()">保存笔记</button>
+                <div class="section-header">
+                    <h3>随手记</h3>
+                    <button class="add-icon-btn" onclick="toggleNoteInput()">➕</button>
+                </div>
+                <div id="noteInputSection" style="display: none;">
+                    <textarea class="note-textarea" id="noteTextarea" placeholder="记录今天的心得和想法..."></textarea>
+                    <button class="save-btn" onclick="saveNote()">保存笔记</button>
+                </div>
+                <div id="noteDisplay" class="note-display"></div>
             </div>
 
             <div class="detail-images">
@@ -1188,16 +1196,19 @@
             document.getElementById('detailDate').textContent =
                 `${year}年${month + 1}月${day}日`;
 
-            // 清空输入框
+            // 清空输入框并隐藏输入区域
             document.getElementById('newTaskInput').value = '';
-            document.getElementById('newRoutineInput').value = '';
+            document.getElementById('taskInputSection').style.display = 'none';
 
-            // 渲染任务列表和routine列表
+            // 渲染任务列表
             renderDetailTasks();
-            renderDetailRoutines();
 
-            // 设置笔记
+            // 设置笔记内容
             document.getElementById('noteTextarea').value = dayData.note || '';
+            document.getElementById('noteDisplay').textContent = dayData.note || '';
+            // 默认隐藏输入框，显示笔记内容
+            document.getElementById('noteInputSection').style.display = 'none';
+            document.getElementById('noteDisplay').style.display = 'block';
 
             // 渲染图片库
             renderImageGallery();
@@ -1216,14 +1227,6 @@
             const dayData = getDayData(dateKey);
             const tasksList = document.getElementById('detailTasksList');
             tasksList.innerHTML = '';
-
-            if (dayData.tasks.length === 0) {
-                const emptyMsg = document.createElement('div');
-                emptyMsg.className = 'empty-tasks';
-                emptyMsg.textContent = '还没有添加任何事项，点击上方添加今天做的事情吧~';
-                tasksList.appendChild(emptyMsg);
-                return;
-            }
 
             dayData.tasks.forEach(task => {
                 const taskItem = document.createElement('div');
@@ -1278,6 +1281,22 @@
                 input.focus();
             } else {
                 section.style.display = 'none';
+            }
+        }
+
+        // 切换笔记输入框显示
+        function toggleNoteInput() {
+            const section = document.getElementById('noteInputSection');
+            const textarea = document.getElementById('noteTextarea');
+            const display = document.getElementById('noteDisplay');
+
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                display.style.display = 'none';
+                textarea.focus();
+            } else {
+                section.style.display = 'none';
+                display.style.display = 'block';
             }
         }
 
@@ -1461,11 +1480,18 @@
 
             const dateKey = getDateKey(selectedDate.year, selectedDate.month, selectedDate.day);
             const dayData = getDayData(dateKey);
-            dayData.note = document.getElementById('noteTextarea').value;
+            const noteContent = document.getElementById('noteTextarea').value;
+            dayData.note = noteContent;
 
             try {
                 saveData();
                 renderCalendar();
+
+                // 更新显示并隐藏输入框
+                document.getElementById('noteDisplay').textContent = noteContent;
+                document.getElementById('noteInputSection').style.display = 'none';
+                document.getElementById('noteDisplay').style.display = 'block';
+
                 alert('笔记已保存！');
             } catch (error) {
                 alert('保存失败：' + error.message);
