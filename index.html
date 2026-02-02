@@ -885,7 +885,8 @@
         <!-- 调试信息 -->
         <div id="debugInfo" style="background: #fffacd; padding: 10px; margin-bottom: 15px; border-radius: 6px; font-size: 14px; line-height: 1.8;">
             <strong>📊 数据状态：</strong><br>
-            <span id="debugText">正在检查...</span>
+            <span id="debugText">正在检查...</span><br>
+            <strong>当前月份：</strong><span id="currentMonthDebug"></span>
         </div>
 
         <div class="calendar" id="calendar"></div>
@@ -1159,6 +1160,16 @@
             // 更新月份显示
             document.getElementById('currentMonth').textContent =
                 `${currentYear}年 ${currentMonth + 1}月`;
+
+            // 调试：显示当前月份有多少天有数据
+            const currentMonthKeys = Object.keys(data).filter(key => {
+                return key.startsWith(`${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`);
+            });
+            document.getElementById('currentMonthDebug').textContent =
+                ` ${currentYear}年${currentMonth + 1}月有 ${currentMonthKeys.length} 天有数据`;
+
+            console.log('渲染日历，当前月份:', `${currentYear}-${currentMonth + 1}`, '有数据的天数:', currentMonthKeys.length);
+            console.log('所有数据的日期:', Object.keys(data));
 
             // 星期标题
             const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
