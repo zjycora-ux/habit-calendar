@@ -878,7 +878,10 @@
                 <button onclick="changeMonth(-1)">上个月</button>
                 <span id="currentMonth"></span>
                 <button onclick="changeMonth(1)">下个月</button>
-                <button onclick="showDebugAlert()" style="background: #ff9800; margin-left: 10px;">🔍 诊断</button>
+                <button onclick="exportData()" style="background: #4CAF50; margin-left: 10px;">💾 导出数据</button>
+                <button onclick="document.getElementById('importFile').click()" style="background: #2196F3; margin-left: 5px;">📥 导入数据</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)" />
+                <button onclick="showDebugAlert()" style="background: #ff9800; margin-left: 5px;">🔍 诊断</button>
             </div>
         </div>
 
@@ -1065,6 +1068,101 @@
             }
 
             alert(message);
+        }
+
+        // 导出数据到文件
+        function exportData() {
+            try {
+                const saved = localStorage.getItem('habitCalendarData');
+                if (!saved) {
+                    alert('没有数据可以导出');
+                    return;
+                }
+
+                const exportObj = {
+                    version: '1.0',
+                    exportDate: new Date().toISOString(),
+                    data: JSON.parse(saved),
+                    customRoutines: customRoutines
+                };
+
+                const dataStr = JSON.stringify(exportObj, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `习惯日历备份_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                alert('✅ 数据已导出！文件已保存到下载文件夹。');
+            } catch (error) {
+                alert('导出失败：' + error.message);
+                console.error('导出错误:', error);
+            }
+        }
+
+        // 从文件导入数据
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importObj = JSON.parse(e.target.result);
+
+                    if (!importObj.data) {
+                        alert('文件格式错误');
+                        return;
+                    }
+
+                    // 询问是否覆盖现有数据
+                    const currentDataCount = Object.keys(data).length;
+                    const importDataCount = Object.keys(importObj.data).length;
+
+                    let confirmMsg = `准备导入 ${importDataCount} 天的记录\n`;
+                    if (currentDataCount > 0) {
+                        confirmMsg += `当前有 ${currentDataCount} 天的记录\n\n`;
+                        confirmMsg += '选择导入方式：\n';
+                        confirmMsg += '确定 = 合并数据（保留现有+导入新的）\n';
+                        confirmMsg += '取消 = 放弃导入';
+                    }
+
+                    if (!confirm(confirmMsg)) {
+                        event.target.value = '';
+                        return;
+                    }
+
+                    // 合并数据
+                    data = { ...data, ...importObj.data };
+                    if (importObj.customRoutines) {
+                        customRoutines = [...new Set([...customRoutines, ...importObj.customRoutines])];
+                    }
+
+                    // 保存到 localStorage
+                    saveData();
+                    renderCalendar();
+                    updateDebugInfo();
+
+                    alert(`✅ 成功导入 ${importDataCount} 天的记录！`);
+                } catch (error) {
+                    alert('导入失败：' + error.message);
+                    console.error('导入错误:', error);
+                }
+
+                event.target.value = '';
+            };
+
+            reader.onerror = function() {
+                alert('文件读取失败');
+                event.target.value = '';
+            };
+
+            reader.readAsText(file);
         }
 
         // 加载数据
