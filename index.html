@@ -919,14 +919,9 @@
             <div class="detail-images">
                 <div class="section-header">
                     <h3>Moment</h3>
-                    <button class="add-icon-btn" onclick="toggleImageUpload()">➕</button>
+                    <button class="add-icon-btn" onclick="triggerImageUpload()">➕</button>
                 </div>
-                <div class="image-upload-section" id="imageUploadSection" style="display: none;">
-                    <label class="image-upload-btn">
-                        <input type="file" id="imageInput" accept="image/*" multiple onchange="handleImageUpload(event)" />
-                        上传图片
-                    </label>
-                </div>
+                <input type="file" id="imageInput" accept="image/*" multiple onchange="handleImageUpload(event)" style="display: none;" />
                 <div id="imageGallery"></div>
             </div>
         </div>
@@ -1302,15 +1297,9 @@
             }
         }
 
-        // 切换图片上传区域显示
-        function toggleImageUpload() {
-            const section = document.getElementById('imageUploadSection');
-
-            if (section.style.display === 'none') {
-                section.style.display = 'block';
-            } else {
-                section.style.display = 'none';
-            }
+        // 触发图片上传
+        function triggerImageUpload() {
+            document.getElementById('imageInput').click();
         }
 
         // 添加新任务
@@ -1585,9 +1574,6 @@
                 renderCalendar();
                 renderImageGallery();
                 hideUploadProgress();
-
-                // 隐藏上传区域
-                document.getElementById('imageUploadSection').style.display = 'none';
             } catch (error) {
                 hideUploadProgress();
                 alert('保存失败！可能是存储空间已满。请删除一些旧图片后重试。');
@@ -1661,10 +1647,6 @@
             gallery.innerHTML = '';
 
             if (dayData.images.length === 0) {
-                const emptyMsg = document.createElement('div');
-                emptyMsg.className = 'empty-images';
-                emptyMsg.textContent = '还没有上传图片，点击上方按钮上传今天的美好瞬间~';
-                gallery.appendChild(emptyMsg);
                 return;
             }
 
