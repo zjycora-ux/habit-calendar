@@ -878,12 +878,13 @@
                 <button onclick="changeMonth(-1)">上个月</button>
                 <span id="currentMonth"></span>
                 <button onclick="changeMonth(1)">下个月</button>
+                <button onclick="showDebugAlert()" style="background: #ff9800; margin-left: 10px;">🔍 诊断</button>
             </div>
         </div>
 
         <!-- 调试信息 -->
-        <div id="debugInfo" style="background: #fffacd; padding: 10px; margin-bottom: 15px; border-radius: 6px; font-size: 13px;">
-            <strong>调试信息：</strong><br>
+        <div id="debugInfo" style="background: #fffacd; padding: 10px; margin-bottom: 15px; border-radius: 6px; font-size: 14px; line-height: 1.8;">
+            <strong>📊 数据状态：</strong><br>
             <span id="debugText">正在检查...</span>
         </div>
 
@@ -1002,6 +1003,59 @@
             }
 
             debugText.innerHTML = info.join('<br>');
+        }
+
+        // 显示诊断弹窗
+        function showDebugAlert() {
+            const saved = localStorage.getItem('habitCalendarData');
+            let message = '';
+
+            // 检查 localStorage 是否可用
+            try {
+                localStorage.setItem('test', 'test');
+                localStorage.removeItem('test');
+                message += '✅ localStorage 可用\n\n';
+            } catch (e) {
+                message += '❌ localStorage 不可用!\n';
+                message += '错误: ' + e.message + '\n\n';
+                message += '可能原因:\n';
+                message += '- Safari 的"阻止跨站追踪"功能\n';
+                message += '- 无痕浏览模式\n';
+                message += '- 存储空间已满\n\n';
+                alert(message);
+                return;
+            }
+
+            // 显示数据状态
+            if (saved) {
+                try {
+                    const parsedData = JSON.parse(saved);
+                    const recordCount = Object.keys(parsedData).length;
+                    const dataSize = new Blob([saved]).size;
+                    message += `✅ 找到 ${recordCount} 天的记录\n`;
+                    message += `📊 数据大小: ${(dataSize / 1024).toFixed(2)} KB\n\n`;
+
+                    // 显示前3天的数据
+                    const dates = Object.keys(parsedData).sort().slice(0, 3);
+                    if (dates.length > 0) {
+                        message += '最近的记录日期:\n';
+                        dates.forEach(date => {
+                            const dayData = parsedData[date];
+                            const taskCount = dayData.tasks ? dayData.tasks.length : 0;
+                            const hasNote = dayData.note ? '有笔记' : '无笔记';
+                            const imageCount = dayData.images ? dayData.images.length : 0;
+                            message += `- ${date}: ${taskCount}个任务, ${hasNote}, ${imageCount}张图片\n`;
+                        });
+                    }
+                } catch (e) {
+                    message += '❌ 数据解析失败: ' + e.message;
+                }
+            } else {
+                message += '⚠️ 没有找到保存的数据\n';
+                message += '这是正常的，如果你还没有添加任何记录';
+            }
+
+            alert(message);
         }
 
         // 加载数据
