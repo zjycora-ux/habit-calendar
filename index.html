@@ -704,35 +704,38 @@
             }
 
             .calendar {
-                gap: 6px;
+                gap: 8px;
             }
 
             .weekday {
-                padding: 8px 4px;
-                font-size: 13px;
+                padding: 10px 4px;
+                font-size: 14px;
             }
 
             .day-cell {
-                min-height: 120px;
+                min-height: 70px;
                 font-size: 13px;
             }
 
+            .day-content {
+                padding: 8px;
+                align-items: center;
+                justify-content: center;
+            }
+
             .day-number {
-                font-size: 16px;
+                font-size: 20px;
+                font-weight: bold;
+                margin-bottom: 0;
             }
 
-            .task-item {
-                font-size: 11px;
+            /* 移动端隐藏任务列表和笔记指示器 */
+            .day-cell .tasks {
+                display: none;
             }
 
-            .task-checkbox {
-                width: 14px;
-                height: 14px;
-            }
-
-            .note-indicator {
-                font-size: 10px;
-                padding-top: 4px;
+            .day-cell .note-indicator {
+                display: none;
             }
 
             .modal-content {
@@ -802,21 +805,16 @@
                 font-size: 20px;
             }
 
-            .day-cell {
-                min-height: 100px;
+            .calendar {
+                gap: 6px;
             }
 
-            .tasks {
-                gap: 4px;
+            .day-cell {
+                min-height: 60px;
             }
 
             .day-number {
-                font-size: 14px;
-                margin-bottom: 6px;
-            }
-
-            .task-item {
-                font-size: 10px;
+                font-size: 18px;
             }
         }
     </style>
