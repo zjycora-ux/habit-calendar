@@ -1168,11 +1168,22 @@
         // 加载数据
         function loadData() {
             const saved = localStorage.getItem('habitCalendarData');
-            console.log('加载数据:', saved ? '找到数据' : '没有数据');
+            console.log('===== 开始加载数据 =====');
+            console.log('localStorage中的数据:', saved ? `有数据，长度${saved.length}` : '无数据');
+
             if (saved) {
                 try {
-                    data = JSON.parse(saved);
-                    console.log('成功加载数据，记录数:', Object.keys(data).length);
+                    const parsedData = JSON.parse(saved);
+                    console.log('JSON解析成功，记录数:', Object.keys(parsedData).length);
+
+                    // 关键：只有解析成功且有数据才赋值
+                    if (Object.keys(parsedData).length > 0) {
+                        data = parsedData;
+                        console.log('✅ 数据已加载到内存，记录数:', Object.keys(data).length);
+                    } else {
+                        console.warn('⚠️ 解析出的数据是空的');
+                    }
+
                     console.log('数据样例（前3条）:', Object.keys(data).slice(0, 3).map(key => {
                         return {
                             date: key,
@@ -1182,8 +1193,9 @@
                         };
                     }));
                 } catch (error) {
-                    console.error('数据解析失败:', error);
-                    data = {};
+                    console.error('❌ 数据解析失败:', error);
+                    // 重要：解析失败时不要清空data，保持原样
+                    alert('数据加载失败：' + error.message + '\n请尝试刷新页面');
                 }
             } else {
                 console.log('localStorage中没有找到数据');
@@ -1195,9 +1207,10 @@
                     customRoutines = JSON.parse(savedRoutines);
                 } catch (error) {
                     console.error('Routines解析失败:', error);
-                    customRoutines = [];
                 }
             }
+
+            console.log('===== 数据加载完成，当前内存中有', Object.keys(data).length, '天记录 =====');
 
             // 立即更新调试显示
             setTimeout(() => {
@@ -1210,8 +1223,22 @@
             try {
                 const dataStr = JSON.stringify(data);
                 const dataSize = new Blob([dataStr]).size;
+                const recordCount = Object.keys(data).length;
 
-                console.log('保存数据，记录数:', Object.keys(data).length, '大小:', dataSize, 'bytes');
+                console.log('===== 准备保存数据 =====');
+                console.log('记录数:', recordCount, '大小:', dataSize, 'bytes');
+
+                // 安全检查：如果当前data是空的，但localStorage里有数据，则不保存
+                const existingSaved = localStorage.getItem('habitCalendarData');
+                if (recordCount === 0 && existingSaved) {
+                    const existingData = JSON.parse(existingSaved);
+                    const existingCount = Object.keys(existingData).length;
+                    if (existingCount > 0) {
+                        console.error('🚨 警告：尝试用空数据覆盖现有的', existingCount, '天记录！已阻止保存！');
+                        alert('检测到异常：系统阻止了空数据覆盖。你的数据是安全的。');
+                        return;
+                    }
+                }
 
                 // 检查大小（localStorage通常限制5-10MB）
                 if (dataSize > 4.5 * 1024 * 1024) {
@@ -1220,7 +1247,7 @@
 
                 localStorage.setItem('habitCalendarData', dataStr);
                 localStorage.setItem('customRoutines', JSON.stringify(customRoutines));
-                console.log('数据保存成功！');
+                console.log('✅ 数据保存成功！');
                 updateStats();
                 updateDebugInfo(); // 更新调试信息
             } catch (error) {
