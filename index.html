@@ -872,6 +872,11 @@
 </head>
 <body>
     <div class="container">
+        <!-- 版本标识 -->
+        <div style="background: #ff5722; color: white; padding: 8px; text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 10px; border-radius: 6px;">
+            ⚠️ 调试版本 v2.0.1 - 数据保护已启用 ⚠️
+        </div>
+
         <div class="header">
             <h1>习惯日历追踪</h1>
             <div class="month-nav">
@@ -886,9 +891,9 @@
         </div>
 
         <!-- 调试信息 -->
-        <div id="debugInfo" style="background: #fffacd; padding: 10px; margin-bottom: 15px; border-radius: 6px; font-size: 14px; line-height: 1.8;">
-            <strong>📊 数据状态：</strong><br>
-            <span id="debugText">正在检查...</span><br>
+        <div id="debugInfo" style="background: #fffacd; padding: 15px; margin-bottom: 15px; border-radius: 8px; font-size: 16px; line-height: 2; border: 3px solid #ff9800;">
+            <strong style="font-size: 18px;">📊 数据状态：</strong><br>
+            <span id="debugText" style="font-size: 15px;">正在检查...</span><br>
             <strong>当前月份：</strong><span id="currentMonthDebug"></span>
         </div>
 
@@ -969,6 +974,22 @@
 
         // 初始化
         function init() {
+            // 立即检查 localStorage
+            const saved = localStorage.getItem('habitCalendarData');
+            console.log('===== 页面加载，立即检查 localStorage =====');
+            if (saved) {
+                try {
+                    const parsedData = JSON.parse(saved);
+                    console.log('✅ localStorage中有', Object.keys(parsedData).length, '天的数据');
+                } catch (e) {
+                    console.error('❌ localStorage数据损坏');
+                }
+            } else {
+                console.log('❌ localStorage中没有数据！');
+                // 立即弹窗警告
+                alert('警告：localStorage中没有找到数据！\n\n可能原因：\n1. 首次使用\n2. 浏览器清空了数据\n3. Safari隐私设置阻止存储');
+            }
+
             loadData();
             renderCalendar();
             updateStats();
