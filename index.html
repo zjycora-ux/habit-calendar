@@ -1035,16 +1035,16 @@
                     message += `✅ 找到 ${recordCount} 天的记录\n`;
                     message += `📊 数据大小: ${(dataSize / 1024).toFixed(2)} KB\n\n`;
 
-                    // 显示前3天的数据
-                    const dates = Object.keys(parsedData).sort().slice(0, 3);
+                    // 显示最新的5天的数据（倒序）
+                    const dates = Object.keys(parsedData).sort().reverse().slice(0, 5);
                     if (dates.length > 0) {
-                        message += '最近的记录日期:\n';
+                        message += '最新的记录日期:\n';
                         dates.forEach(date => {
                             const dayData = parsedData[date];
                             const taskCount = dayData.tasks ? dayData.tasks.length : 0;
-                            const hasNote = dayData.note ? '有笔记' : '无笔记';
+                            const hasNote = dayData.note && dayData.note.trim() ? '有笔记' : '无笔记';
                             const imageCount = dayData.images ? dayData.images.length : 0;
-                            message += `- ${date}: ${taskCount}个任务, ${hasNote}, ${imageCount}张图片\n`;
+                            message += `📅 ${date}: ${taskCount}个任务, ${hasNote}, ${imageCount}张图片\n`;
                         });
                     }
                 } catch (e) {
