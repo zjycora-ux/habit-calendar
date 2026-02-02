@@ -834,14 +834,6 @@
 
         <div class="stats">
             <div class="stat-item">
-                <div class="stat-label">本月完成率</div>
-                <div class="stat-value" id="completionRate">0%</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-label">连续打卡</div>
-                <div class="stat-value" id="streakDays">0天</div>
-            </div>
-            <div class="stat-item">
                 <div class="stat-label">有笔记天数</div>
                 <div class="stat-value" id="noteDays">0天</div>
             </div>
@@ -1425,45 +1417,17 @@
         // 更新统计
         function updateStats() {
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-            let totalTasks = 0;
-            let completedTasks = 0;
             let noteDaysCount = 0;
-            let consecutiveDays = 0;
-            let foundIncomplete = false;
 
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateKey = getDateKey(currentYear, currentMonth, day);
-                if (data[dateKey] && data[dateKey].tasks.length > 0) {
-                    const tasks = data[dateKey].tasks;
-                    const dayComplete = tasks.every(t => t.completed);
-
-                    totalTasks += tasks.length;
-                    completedTasks += tasks.filter(t => t.completed).length;
-
+                if (data[dateKey]) {
                     if (data[dateKey].note && data[dateKey].note.trim()) {
                         noteDaysCount++;
-                    }
-
-                    // 计算连续天数（从今天往前）
-                    const today = new Date();
-                    if (currentYear === today.getFullYear() &&
-                        currentMonth === today.getMonth() &&
-                        day <= today.getDate() &&
-                        !foundIncomplete) {
-                        if (dayComplete && tasks.length > 0) {
-                            consecutiveDays++;
-                        } else {
-                            foundIncomplete = true;
-                        }
                     }
                 }
             }
 
-            const completionRate = totalTasks > 0 ?
-                Math.round((completedTasks / totalTasks) * 100) : 0;
-
-            document.getElementById('completionRate').textContent = `${completionRate}%`;
-            document.getElementById('streakDays').textContent = `${consecutiveDays}天`;
             document.getElementById('noteDays').textContent = `${noteDaysCount}天`;
         }
 
