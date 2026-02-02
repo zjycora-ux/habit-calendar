@@ -994,13 +994,21 @@
                     const parsedData = JSON.parse(saved);
                     const recordCount = Object.keys(parsedData).length;
                     const dataSize = new Blob([saved]).size;
-                    info.push(`✅ 找到 ${recordCount} 天的记录`);
+                    info.push(`✅ localStorage中找到 ${recordCount} 天的记录`);
                     info.push(`📊 数据大小: ${(dataSize / 1024).toFixed(2)} KB`);
                 } catch (e) {
                     info.push('❌ 数据解析失败');
                 }
             } else {
-                info.push('⚠️ 没有找到保存的数据');
+                info.push('⚠️ localStorage中没有找到保存的数据');
+            }
+
+            // 显示内存中的数据状态
+            const memoryRecordCount = Object.keys(data).length;
+            if (memoryRecordCount > 0) {
+                info.push(`✅ 内存中已加载 ${memoryRecordCount} 天的记录`);
+            } else {
+                info.push(`⚠️ 内存中没有数据（data对象为空）`);
             }
 
             debugText.innerHTML = info.join('<br>');
@@ -1067,10 +1075,20 @@
                 try {
                     data = JSON.parse(saved);
                     console.log('成功加载数据，记录数:', Object.keys(data).length);
+                    console.log('数据样例（前3条）:', Object.keys(data).slice(0, 3).map(key => {
+                        return {
+                            date: key,
+                            tasks: data[key].tasks?.length || 0,
+                            note: data[key].note ? '有' : '无',
+                            images: data[key].images?.length || 0
+                        };
+                    }));
                 } catch (error) {
                     console.error('数据解析失败:', error);
                     data = {};
                 }
+            } else {
+                console.log('localStorage中没有找到数据');
             }
 
             const savedRoutines = localStorage.getItem('customRoutines');
@@ -1082,6 +1100,11 @@
                     customRoutines = [];
                 }
             }
+
+            // 立即更新调试显示
+            setTimeout(() => {
+                updateDebugInfo();
+            }, 100);
         }
 
         // 保存数据
