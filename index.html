@@ -220,22 +220,48 @@
             margin-bottom: 25px;
         }
 
-        .detail-tasks h3 {
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .section-header h3 {
             font-size: 18px;
             color: #333;
-            margin-bottom: 15px;
+            margin: 0;
+        }
+
+        .add-icon-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-icon-btn:hover {
+            background: #45a049;
+            transform: scale(1.1);
+        }
+
+        .add-icon-btn:active {
+            transform: scale(0.95);
         }
 
         .detail-routines {
             margin-bottom: 25px;
             padding-top: 20px;
             border-top: 2px solid #e0e0e0;
-        }
-
-        .detail-routines h3 {
-            font-size: 18px;
-            color: #333;
-            margin-bottom: 15px;
         }
 
         .detail-notes {
@@ -849,10 +875,13 @@
             </div>
 
             <div class="detail-tasks">
-                <h3>📝 今日记录</h3>
-                <div class="add-task-section">
+                <div class="section-header">
+                    <h3>📝 今日记录</h3>
+                    <button class="add-icon-btn" onclick="toggleTaskInput()">➕</button>
+                </div>
+                <div class="add-task-section" id="taskInputSection" style="display: none;">
                     <div class="add-task-input">
-                        <input type="text" id="newTaskInput" placeholder="输入今天做的事情，例如：看电影、买菜..." />
+                        <input type="text" id="newTaskInput" placeholder="输入今天做的事情..." />
                         <button class="add-task-btn" onclick="addTask()">添加</button>
                     </div>
                 </div>
@@ -860,8 +889,11 @@
             </div>
 
             <div class="detail-routines">
-                <h3>日常习惯 (Routine)</h3>
-                <div class="add-task-section">
+                <div class="section-header">
+                    <h3>日常习惯 (Routine)</h3>
+                    <button class="add-icon-btn" onclick="toggleRoutineInput()">➕</button>
+                </div>
+                <div class="add-task-section" id="routineInputSection" style="display: none;">
                     <div class="add-task-input">
                         <input type="text" id="newRoutineInput" placeholder="添加自定义习惯..." />
                         <button class="add-task-btn" onclick="addRoutine()">添加习惯</button>
@@ -1223,6 +1255,32 @@
             });
         }
 
+        // 切换任务输入框显示
+        function toggleTaskInput() {
+            const section = document.getElementById('taskInputSection');
+            const input = document.getElementById('newTaskInput');
+
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                input.focus();
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        // 切换Routine输入框显示
+        function toggleRoutineInput() {
+            const section = document.getElementById('routineInputSection');
+            const input = document.getElementById('newRoutineInput');
+
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                input.focus();
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
         // 添加新任务
         function addTask() {
             if (!selectedDate) return;
@@ -1258,9 +1316,9 @@
                 renderCalendar();
                 renderDetailTasks();
 
-                // 清空输入框
+                // 清空输入框并隐藏
                 input.value = '';
-                input.focus();
+                document.getElementById('taskInputSection').style.display = 'none';
             } catch (error) {
                 dayData.tasks.pop(); // 回滚
                 alert('保存失败：' + error.message);
@@ -1358,9 +1416,9 @@
                 saveData();
                 renderDetailRoutines();
 
-                // 清空输入框
+                // 清空输入框并隐藏
                 input.value = '';
-                input.focus();
+                document.getElementById('routineInputSection').style.display = 'none';
             } catch (error) {
                 customRoutines.pop(); // 回滚
                 alert('保存失败：' + error.message);
