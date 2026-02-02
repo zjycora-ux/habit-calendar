@@ -917,13 +917,15 @@
             </div>
 
             <div class="detail-images">
-                <h3>今日图片</h3>
-                <div class="image-upload-section">
+                <div class="section-header">
+                    <h3>Moment</h3>
+                    <button class="add-icon-btn" onclick="toggleImageUpload()">➕</button>
+                </div>
+                <div class="image-upload-section" id="imageUploadSection" style="display: none;">
                     <label class="image-upload-btn">
                         <input type="file" id="imageInput" accept="image/*" multiple onchange="handleImageUpload(event)" />
                         上传图片
                     </label>
-                    <span style="margin-left: 10px; color: #666; font-size: 14px;">可上传多张图片，点击星星设置为背景</span>
                 </div>
                 <div id="imageGallery"></div>
             </div>
@@ -1300,6 +1302,17 @@
             }
         }
 
+        // 切换图片上传区域显示
+        function toggleImageUpload() {
+            const section = document.getElementById('imageUploadSection');
+
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
         // 添加新任务
         function addTask() {
             if (!selectedDate) return;
@@ -1572,6 +1585,9 @@
                 renderCalendar();
                 renderImageGallery();
                 hideUploadProgress();
+
+                // 隐藏上传区域
+                document.getElementById('imageUploadSection').style.display = 'none';
             } catch (error) {
                 hideUploadProgress();
                 alert('保存失败！可能是存储空间已满。请删除一些旧图片后重试。');
